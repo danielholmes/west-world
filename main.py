@@ -1,8 +1,9 @@
 import time
 
 from miner import Miner
+from minerswife import MinersWife
 
-miner = Miner(1)
+entities = (Miner(1), MinersWife(2))
 while True:
-    miner.update()
+    [e.update() for e in entities]
     time.sleep(1)
