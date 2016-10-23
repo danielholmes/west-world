@@ -1,6 +1,7 @@
 from enum import Enum
 
 from entities import GameEntity, GameEntityState, StateMachine
+from messages import MessageType
 from printcolours import blue
 
 
@@ -10,8 +11,8 @@ class Miner(GameEntity):
     WEALTHY_THRESHOLD = 7
     RESTED_FATIGUE_THRESHOLD = 0
 
-    def __init__(self, id):
-        super(Miner, self).__init__(id)
+    def __init__(self, messages, id):
+        super(Miner, self).__init__(messages, id)
 
         self._location = Location.SHACK
         self._gold_carried = 0
@@ -35,6 +36,10 @@ class Miner(GameEntity):
             return False
         self._location = new_location
         return True
+
+    @property
+    def location(self):
+        return self._location
 
     @property
     def is_thirsty(self):
@@ -78,6 +83,15 @@ class Miner(GameEntity):
 
     def change_state(self, state):
         self._state_machine.change_state(state)
+
+    def revert_to_previous_state(self):
+        self._state_machine.revert_to_previous_state()
+
+    def handle_message(self, message):
+        self._state_machine.handle_message(message)
+
+    def tell_wife_home(self):
+        self._messages.dispatch(sender=self, receiver_id=2, message_type=MessageType.HONEY_IM_HOME)
 
     def sing_out(self, message):
         print(blue("Miner {0}: {1}".format(self.id, message)))
@@ -124,6 +138,8 @@ class GoHomeAndSleepTilRestedState(GameEntityState):
         if miner.change_location(Location.SHACK):
             miner.sing_out("Walkin' to the shack")
 
+            miner.tell_wife_home()
+
     def execute(self, miner):
         if miner.is_rested:
             miner.sing_out("What a God darn fantastic nap! Time to find more gold")
@@ -149,6 +165,19 @@ class MinerGlobalState(GameEntityState):
     def execute(self, miner):
         if miner.is_thirsty:
             miner.change_state(QuenchThirstState())
+
+    def handle_message(self, miner, message):
+        if message.message_type == MessageType.STEW_READY and miner.location == Location.SHACK:
+            miner.sing_out("I'm coming")
+            miner.change_state(EatStewState())
+            return True
+        return False
+
+
+class EatStewState(GameEntityState):
+    def execute(self, miner):
+        miner.sing_out("It tastes great!! Now back to what I was doing")
+        miner.revert_to_previous_state()
 
 
 class Location(Enum):
