@@ -1,6 +1,7 @@
 from enum import Enum
 
 from entities import GameEntity, GameEntityState, StateMachine
+from printcolours import blue
 
 
 class Miner(GameEntity):
@@ -79,7 +80,7 @@ class Miner(GameEntity):
         self._state_machine.change_state(state)
 
     def sing_out(self, message):
-        print("Miner {0}: {1}".format(self.id, message))
+        print(blue("Miner {0}: {1}".format(self.id, message)))
 
 
 class EnterMineAndDigForNuggetState(GameEntityState):

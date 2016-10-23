@@ -1,6 +1,7 @@
 from random import randrange
 
 from entities import GameEntity, GameEntityState, StateMachine
+from printcolours import green
 
 
 class MinersWife(GameEntity):
@@ -19,7 +20,7 @@ class MinersWife(GameEntity):
         self._state_machine.revert_to_previous_state()
 
     def sing_out(self, message):
-        print("Elsa {0}: {1}".format(self.id, message))
+        print(green("Elsa {0}: {1}".format(self.id, message)))
 
 
 class VisitBathroomState(GameEntityState):
