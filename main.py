@@ -1,6 +1,7 @@
 import time
 from sys import stdin
 
+import ids
 from entities import EntityManager
 from messages import MessageDispatcher
 from miner import Miner
@@ -9,8 +10,8 @@ from minerswife import MinersWife
 entities = EntityManager()
 messages = MessageDispatcher(entities)
 
-entities.register(Miner(messages, 1))
-entities.register(MinersWife(messages, 2))
+entities.register(MinersWife(messages, ids.ELSA))
+entities.register(Miner(messages, ids.MINER))
 
 while True:
     for i in range(20):

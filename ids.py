@@ -1,0 +1,2 @@
+MINER = 2
+ELSA = 1

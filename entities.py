@@ -74,6 +74,9 @@ class StateMachine(object):
             raise Exception("No previous state")
         self.change_state(self._previous_state)
 
+    def current_state_is_a(self, klass):
+        return self._state.__class__ == klass
+
     def _enter_state(self, state):
         self._state = state
         self._state.enter(self._owner)

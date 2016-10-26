@@ -1,5 +1,6 @@
 from enum import Enum
 
+import ids
 from entities import GameEntity, GameEntityState, StateMachine
 from messages import MessageType
 from printcolours import blue
@@ -8,8 +9,8 @@ from printcolours import blue
 class Miner(GameEntity):
     CARRIED_GOLD_HEAVY_THRESHOLD = 3
     THIRSTY_THRESHOLD = 5
-    WEALTHY_THRESHOLD = 7
-    RESTED_FATIGUE_THRESHOLD = 0
+    WEALTHY_THRESHOLD = 5
+    TIREDNESS_THRESHOLD = 6
 
     def __init__(self, messages, id):
         super(Miner, self).__init__(messages, id)
@@ -46,16 +47,16 @@ class Miner(GameEntity):
         return self._thirst >= Miner.THIRSTY_THRESHOLD
 
     @property
+    def is_tired(self):
+        return self._fatigue >= Miner.TIREDNESS_THRESHOLD
+
+    @property
     def has_enough_in_bank(self):
         return self.gold_in_bank >= Miner.WEALTHY_THRESHOLD
 
     @property
     def is_carried_gold_getting_heavy(self):
         return self._gold_carried >= Miner.CARRIED_GOLD_HEAVY_THRESHOLD
-
-    @property
-    def is_rested(self):
-        return self._fatigue <= Miner.RESTED_FATIGUE_THRESHOLD
 
     @property
     def thirst(self):
@@ -71,7 +72,7 @@ class Miner(GameEntity):
 
     def buy_and_consume_drink(self):
         self._thirst = 0
-        self._gold_in_bank -= 1
+        self._gold_in_bank -= 2
 
     def put_gold_in_bank(self):
         self._gold_in_bank += self._gold_carried
@@ -91,7 +92,7 @@ class Miner(GameEntity):
         self._state_machine.handle_message(message)
 
     def tell_wife_home(self):
-        self._messages.dispatch(sender=self, receiver_id=2, message_type=MessageType.HONEY_IM_HOME)
+        self._messages.dispatch(sender=self, receiver_id=ids.ELSA, message_type=MessageType.HONEY_IM_HOME)
 
     def sing_out(self, message):
         print(blue("Miner {0}: {1}".format(self.id, message)))
@@ -100,7 +101,7 @@ class Miner(GameEntity):
 class EnterMineAndDigForNuggetState(GameEntityState):
     def enter(self, miner):
         if miner.change_location(Location.GOLD_MINE):
-            miner.sing_out("Walkin' to the gold mine")
+            miner.sing_out("Walkin' to the goldmine")
 
     def execute(self, miner):
         miner.collect_gold()
@@ -114,17 +115,17 @@ class EnterMineAndDigForNuggetState(GameEntityState):
             miner.change_state(QuenchThirstState())
 
     def exit(self, miner):
-        miner.sing_out("Ah'm leavin' the gold mine with mah pockets ful o' sweet gold")
+        miner.sing_out("Ah'm leavin' the goldmine with mah pockets full o' sweet gold")
 
 
 class VisitBankAndDepositGoldState(GameEntityState):
     def enter(self, miner):
         if miner.change_location(Location.BANK):
-            miner.sing_out("Walkin' to the bank")
+            miner.sing_out("Goin' to the bank. Yes siree")
 
     def execute(self, miner):
         miner.put_gold_in_bank()
-        miner.sing_out("Puttin' my money in the bank, now I have {0}".format(miner.gold_in_bank))
+        miner.sing_out("Depositing gold. Total savings now: {0}".format(miner.gold_in_bank))
 
         if miner.has_enough_in_bank:
             miner.sing_out("WooHoo! Rich enough for now. Back home to mah li'lle lady")
@@ -136,29 +137,31 @@ class VisitBankAndDepositGoldState(GameEntityState):
 class GoHomeAndSleepTilRestedState(GameEntityState):
     def enter(self, miner):
         if miner.change_location(Location.SHACK):
-            miner.sing_out("Walkin' to the shack")
+            miner.sing_out("Walkin' home")
 
-            miner.tell_wife_home()
+        miner.tell_wife_home()
 
     def execute(self, miner):
-        if miner.is_rested:
+        if miner.is_tired:
+            miner.sleep()
+            miner.sing_out("zzzz...")
+        else:
             miner.sing_out("What a God darn fantastic nap! Time to find more gold")
             miner.change_state(EnterMineAndDigForNuggetState())
-            return
-
-        miner.sleep()
-        miner.sing_out("zzzz...")
 
 
 class QuenchThirstState(GameEntityState):
     def enter(self, miner):
         if miner.change_location(Location.SALOON):
-            miner.sing_out("Runnin' to the saloon, yeeeehaw!")
+            miner.sing_out("Boy, ah sure is thusty! Walking to the saloon")
 
     def execute(self, miner):
         miner.buy_and_consume_drink()
-        miner.sing_out("Drinkin' mah whiskey, no more thirst")
+        miner.sing_out("That's mighty fine sippin liquer")
         miner.change_state(EnterMineAndDigForNuggetState())
+
+    def exit(self, miner):
+        miner.sing_out("Leaving the saloon, feelin' good")
 
 
 class MinerGlobalState(GameEntityState):
@@ -175,9 +178,15 @@ class MinerGlobalState(GameEntityState):
 
 
 class EatStewState(GameEntityState):
+    def enter(self, miner):
+        miner.sing_out("Smells Reaaal goood Elsa!")
+
     def execute(self, miner):
-        miner.sing_out("It tastes great!! Now back to what I was doing")
+        miner.sing_out("Tastes real good too!")
         miner.revert_to_previous_state()
+
+    def exit(self, miner):
+        miner.sing_out("Thankya li'lle lady. Ah better get back to whatever ah wuz doin'")
 
 
 class Location(Enum):
