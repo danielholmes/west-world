@@ -20,7 +20,7 @@ class Miner(GameEntity):
         self._gold_in_bank = 0
         self._thirst = 0
         self._fatigue = 0
-        self._state_machine = StateMachine(self, MinerGlobalState(), GoHomeAndSleepTilRestedState())
+        self._state_machine = StateMachine(self, MinerGlobalState(), StartState())
 
     def update(self):
         self._thirst += 1
@@ -98,6 +98,11 @@ class Miner(GameEntity):
         print(blue("Miner {0}: {1}".format(self.id, message)))
 
 
+class StartState(GameEntityState):
+    def execute(self, miner):
+        miner.change_state(EnterMineAndDigForNuggetState())
+
+
 class EnterMineAndDigForNuggetState(GameEntityState):
     def enter(self, miner):
         if miner.change_location(Location.GOLD_MINE):
@@ -138,8 +143,7 @@ class GoHomeAndSleepTilRestedState(GameEntityState):
     def enter(self, miner):
         if miner.change_location(Location.SHACK):
             miner.sing_out("Walkin' home")
-
-        miner.tell_wife_home()
+            miner.tell_wife_home()
 
     def execute(self, miner):
         if miner.is_tired:
@@ -165,10 +169,6 @@ class QuenchThirstState(GameEntityState):
 
 
 class MinerGlobalState(GameEntityState):
-    def execute(self, miner):
-        if miner.is_thirsty:
-            miner.change_state(QuenchThirstState())
-
     def handle_message(self, miner, message):
         if message.message_type == MessageType.STEW_READY and miner.location == Location.SHACK:
             miner.sing_out("I'm coming")

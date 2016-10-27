@@ -1,6 +1,6 @@
 # West World
 
-Small experiment/testing implementations of FSMs
+Small experiment/testing implementations of FSMs and message sending
 
 
 ## Dependencies

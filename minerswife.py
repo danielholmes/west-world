@@ -48,6 +48,9 @@ class VisitBathroomState(GameEntityState):
     def enter(self, wife):
         wife.sing_out("Walkin' to the can. Need to powda mah pretty li'lle nose")
 
+    def exit(self, wife):
+        wife.sing_out("Leavin' the Jon")
+
     def execute(self, wife):
         wife.sing_out("Ahhhhhh! Sweet relief!")
         wife.revert_to_previous_state()
@@ -56,9 +59,6 @@ class VisitBathroomState(GameEntityState):
 class DoHouseworkState(GameEntityState):
     def enter(self, wife):
         wife.sing_out("Time to do some more housework!")
-
-    def exit(self, wife):
-        wife.sing_out("Leavin' the Jon")
 
     def execute(self, wife):
         tasks = (
