@@ -33,6 +33,9 @@ class Message(object):
 class MessageType(Enum):
     HONEY_IM_HOME = 1
     STEW_READY = 2
+    COME_AT_ME_BRO = 3
+    PUNCH_COMING_AT_YOU = 4
+    IM_DONE_WITH_YA = 5
 
 
 class MessageDispatcher(object):

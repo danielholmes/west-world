@@ -55,6 +55,18 @@ class GameEntityState(object):
         return False
 
 
+class NullState(GameEntityState):
+    pass
+
+
+class DelayedState(GameEntityState):
+    def __init__(self, state):
+        self._state = state
+
+    def execute(self, entity):
+        entity.change_state(self._state)
+
+
 class StateMachine(object):
     def __init__(self, owner, global_state, state):
         self._owner = owner

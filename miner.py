@@ -1,7 +1,7 @@
 from enum import Enum
 
 import ids
-from entities import GameEntity, GameEntityState, StateMachine
+from entities import GameEntity, GameEntityState, StateMachine, DelayedState
 from messages import MessageType
 from printcolours import blue
 
@@ -20,7 +20,11 @@ class Miner(GameEntity):
         self._gold_in_bank = 0
         self._thirst = 0
         self._fatigue = 0
-        self._state_machine = StateMachine(self, MinerGlobalState(), StartState())
+        self._state_machine = StateMachine(
+            self,
+            MinerGlobalState(),
+            DelayedState(EnterMineAndDigForNuggetState())
+        )
 
     def update(self):
         self._thirst += 1
@@ -94,13 +98,12 @@ class Miner(GameEntity):
     def tell_wife_home(self):
         self._messages.dispatch(sender=self, receiver_id=ids.ELSA, message_type=MessageType.HONEY_IM_HOME)
 
+    def swear_at_barfly(self):
+        self.sing_out('Hey bar fly, you\'re a pecker head')
+        self._messages.dispatch(sender=self, receiver_id=ids.BAR_FLY, message_type=MessageType.COME_AT_ME_BRO)
+
     def sing_out(self, message):
         print(blue("Miner {0}: {1}".format(self.id, message)))
-
-
-class StartState(GameEntityState):
-    def execute(self, miner):
-        miner.change_state(EnterMineAndDigForNuggetState())
 
 
 class EnterMineAndDigForNuggetState(GameEntityState):
@@ -158,6 +161,7 @@ class QuenchThirstState(GameEntityState):
     def enter(self, miner):
         if miner.change_location(Location.SALOON):
             miner.sing_out("Boy, ah sure is thusty! Walking to the saloon")
+            miner.swear_at_barfly()
 
     def execute(self, miner):
         miner.buy_and_consume_drink()
@@ -165,7 +169,7 @@ class QuenchThirstState(GameEntityState):
         miner.change_state(EnterMineAndDigForNuggetState())
 
     def exit(self, miner):
-        miner.sing_out("Leaving the saloon, feelin' good")
+        miner.sing_out("Drinkin times over")
 
 
 class MinerGlobalState(GameEntityState):
@@ -174,6 +178,28 @@ class MinerGlobalState(GameEntityState):
             miner.sing_out("I'm coming")
             miner.change_state(EatStewState())
             return True
+
+        if message.message_type == MessageType.PUNCH_COMING_AT_YOU:
+            miner.sing_out('What\'s yer problem')
+            miner.change_state(BlockPunchesState())
+            return True
+
+        return False
+
+
+class BlockPunchesState(GameEntityState):
+    def execute(self, miner):
+        miner.sing_out('Missed meh! Try again')
+
+    def handle_message(self, miner, message):
+        if message.message_type == MessageType.IM_DONE_WITH_YA:
+            miner.sing_out('Ya wimp!')
+            miner.revert_to_previous_state()
+            return True
+
+        if message.message_type == MessageType.PUNCH_COMING_AT_YOU:
+            return True
+
         return False
 
 

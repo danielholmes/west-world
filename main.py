@@ -2,6 +2,7 @@ import time
 from sys import stdin
 
 import ids
+from barfly import BarFly
 from entities import EntityManager
 from messages import MessageDispatcher
 from miner import Miner
@@ -12,6 +13,7 @@ messages = MessageDispatcher(entities)
 
 entities.register(Miner(messages, ids.MINER))
 entities.register(MinersWife(messages, ids.ELSA))
+entities.register(BarFly(messages, ids.BAR_FLY))
 
 while True:
     for i in range(10):
