@@ -1,3 +1,4 @@
+import random
 from enum import Enum
 
 import ids
@@ -189,7 +190,13 @@ class MinerGlobalState(GameEntityState):
 
 class BlockPunchesState(GameEntityState):
     def execute(self, miner):
-        miner.sing_out('Missed meh! Try again')
+        miner.sing_out(random.choice(
+            (
+                'Missed meh! Try again',
+                'Swinging like a rusty gate!',
+                'My gramma swings harder'
+            )
+        ))
 
     def handle_message(self, miner, message):
         if message.message_type == MessageType.IM_DONE_WITH_YA:

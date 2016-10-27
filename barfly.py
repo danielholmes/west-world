@@ -1,4 +1,4 @@
-from random import random
+import random
 
 import ids
 from entities import GameEntity, GameEntityState, StateMachine, NullState
@@ -51,7 +51,7 @@ class WaitingForMinerState(GameEntityState):
 
     def handle_message(self, fly, message):
         if message.message_type == MessageType.COME_AT_ME_BRO:
-            if not fly.worn_out and random() < 0.5:
+            if not fly.worn_out and random.random() < 0.5:
                 fly.sing_out('Wrong day Miner, yer done for!')
                 fly.change_state(FightMinerState())
             else:
@@ -69,5 +69,5 @@ class FightMinerState(GameEntityState):
             fly.revert_to_previous_state()
             return
 
-        fly.sing_out('Take that!')
+        fly.sing_out(random.choice(('Take that!', 'Booya', 'Here\'s the shake and bake')))
         fly.throw_punch_at_miner()
